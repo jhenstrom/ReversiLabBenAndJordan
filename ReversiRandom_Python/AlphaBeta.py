@@ -162,8 +162,8 @@ def playGame(me, thehost):
 
 
 def alpha_beta_pruning():
-    cost, move = max_value(state, math.inf, math.inf, depth-1)
-    return move
+    cost, best_move = max_value(state, math.inf, math.inf, depth-1)
+    return best_move
 
 
 def max_value(board_state, alpha, beta, current_depth):
@@ -173,12 +173,15 @@ def max_value(board_state, alpha, beta, current_depth):
     best_move = None;
     validMoves = getValidMoves(board_state, me)
     for move in validMoves:
-        current_move_value, move = min_value(new_board_state(board_state, move), alpha, beta, current_depth-1)
+        current_move_value, move_for_value = min_value(new_board_state(board_state, move), alpha, beta, current_depth-1)
+        if current_move_value > best_value_so_far:
+            best_value_so_far = current_move_value
+            best_move = move
         best_value_so_far = max(best_value_so_far, current_move_value)
         if best_value_so_far >= beta: # pruning
             return best_value_so_far
         alpha = max(alpha, best_value_so_far)
-    return best_value_so_far,
+    return best_value_so_far, best_move
 
 
 def min_value(board_state, alpha, beta, current_depth):
@@ -188,7 +191,11 @@ def min_value(board_state, alpha, beta, current_depth):
     best_move = None;
     validMoves = getValidMoves(board_state, opponent)
     for move in validMoves:
-        best_value_so_far = min(best_value_so_far, max_value(new_board_state(board_state, move), alpha, beta, current_depth-1))
+        current_move_value, move_for_value = max_value(new_board_state(board_state, move), alpha, beta, current_depth - 1)
+        if current_move_value < best_value_so_far:
+            best_value_so_far = current_move_value
+            best_move = move
+        best_value_so_far = min(best_value_so_far, )
         if best_value_so_far <= alpha: # pruning
             return best_value_so_far
         beta = min(beta, best_value_so_far)
