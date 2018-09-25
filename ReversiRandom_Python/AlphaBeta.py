@@ -7,17 +7,17 @@ from random import randint
 
 t1 = 0.0  # the amount of time remaining to player 1
 t2 = 0.0  # the amount of time remaining to player 2
-
+depth = 4
 state = [[0 for x in range(8)] for y in range(8)]  # state[0][0] is the bottom left corner of the board (on the GUI)
-
+opponent = -1
 
 # You should modify this function
 # validMoves is a list of valid locations that you could place your "stone" on this turn
 # Note that "state" is a global variable 2D list that shows the state of the game
 def move(validMoves):
     # just return a random move
-    myMove = randint(0, len(validMoves) - 1)
-
+    # myMove = randint(0, len(validMoves) - 1)
+    myMove = alpha_beta_pruning(depth)
     return myMove
 
 
@@ -109,27 +109,27 @@ def couldBe(row, col, me):
 
 
 # generates the set of valid moves for the player; returns a list of valid moves (validMoves)
-def getValidMoves(round, me):
+def getValidMoves(board_state, current_player, current_round=5):
     validMoves = []
-    print("Round: " + str(round))
+    # print("Round: " + str(current_round))
 
     for i in range(8):
         print(state[i])
 
-    if (round < 4):
-        if (state[3][3] == 0):
+    if current_round < 4:
+        if board_state[3][3] == 0:
             validMoves.append([3, 3])
-        if (state[3][4] == 0):
+        if board_state[3][4] == 0:
             validMoves.append([3, 4])
-        if (state[4][3] == 0):
+        if board_state[4][3] == 0:
             validMoves.append([4, 3])
-        if (state[4][4] == 0):
+        if board_state[4][4] == 0:
             validMoves.append([4, 4])
     else:
         for i in range(8):
             for j in range(8):
-                if (state[i][j] == 0):
-                    if (couldBe(i, j, me)):
+                if board_state[i][j] == 0:
+                    if couldBe(i, j, current_player):
                         validMoves.append([i, j])
 
     return validMoves
@@ -138,17 +138,17 @@ def getValidMoves(round, me):
 # main function that (1) establishes a connection with the server, and then plays whenever it is this player's turn
 # noinspection PyTypeChecker
 def playGame(me, thehost):
+    global opponent
     # create a random number generator
-
     sock = initClient(me, thehost)
-
+    opponent = 2 if me == 1 else opponent = 1
     while (True):
         print("Read")
         status = readMessage(sock)
 
         if (status[0] == me):
             print("Move")
-            validMoves = getValidMoves(status[1], me)
+            validMoves = getValidMoves(state, status[1], me)
             print(validMoves)
 
             myMove = move(validMoves)
@@ -160,42 +160,62 @@ def playGame(me, thehost):
         else:
             print("It isn't my turn")
 
-def alpha_beta_pruning(state, depth, round):
-    v = MaxValue(state, math.inf, math.inf, depth-1, round)
 
-def max_value(state, alpha, beta, depth, round):
-    if depth == 0:
-        return utility(state)
-    v = math.inf
+def alpha_beta_pruning():
+    cost, move = max_value(state, math.inf, math.inf, depth-1)
+    return move
+
+
+def max_value(board_state, alpha, beta, current_depth):
+    if current_depth == 0:
+        return utility(board_state)
+    best_value_so_far = math.inf
+    best_move = None;
+    validMoves = getValidMoves(board_state, me)
     for move in validMoves:
-        v = Max(v, min_value(results(state, move), alpha, beta, depth-1, round+1))
-        if v<= beta:
-            alpha = max(a, v)
+        current_move_value, move = min_value(new_board_state(board_state, move), alpha, beta, current_depth-1)
+        best_value_so_far = max(best_value_so_far, current_move_value)
+        if best_value_so_far >= beta: # pruning
+            return best_value_so_far
+        alpha = max(alpha, best_value_so_far)
+    return best_value_so_far,
 
-def min_value(state, alpha, beta, depth):
-    if depth == 0:
-        return utility(state)
-    v = math.inf
+
+def min_value(board_state, alpha, beta, current_depth):
+    if current_depth == 0:
+        return utility(board_state)
+    best_value_so_far = math.inf
+    best_move = None;
+    validMoves = getValidMoves(board_state, opponent)
     for move in validMoves:
-        v = min(v, max_value(results(state, move), alpha, beta, depth-1, round+1))
-        if v<= beta:
-            beta = min(a, v)
-    return v
+        best_value_so_far = min(best_value_so_far, max_value(new_board_state(board_state, move), alpha, beta, current_depth-1))
+        if best_value_so_far <= alpha: # pruning
+            return best_value_so_far
+        beta = min(beta, best_value_so_far)
+    return best_value_so_far
 
-def utility(state):
-    return 0
 
-def results(state, move):
+def utility(current_state):
+    return len(getValidMoves(current_state, me)) - len(getValidMoves(current_state, opponent))
+
+
+# Mimics doing specified move on current state
+# Returns a new board state
+def new_board_state(current_state, move):
     return state
 
 
-# call: python RandomGuy.py [ipaddress] [player_number]
-# ipaddress is the ipaddress on the computer the server was launched on.  Enter "localhost" if it is on the same computer
+# call: python3 RandomGuy.py [ipaddress] [player_number]
+# ipaddress is the ipaddress on the computer the server was launched on.
+# Enter "localhost" if it is on the same computer
 # player_number is 1 (for the black player) and 2 (for the white player)
 if __name__ == "__main__":
     print('Number of arguments:', len(sys.argv), 'arguments.')
     print('Argument List:', str(sys.argv))
 
     print(str(sys.argv[1]))
-
-    playGame(int(sys.argv[2]), sys.argv[1])
+    me = int(sys.argv[2])
+    if me == 1 or me == 2:
+        playGame(me, sys.argv[1])
+    else:
+        print("USAGE: python3 RandomGuy.py [ipaddress] [1,2]")
