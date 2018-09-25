@@ -2,7 +2,7 @@ import sys
 import socket
 import time
 import math
-
+import copy
 # from random import randint
 
 t1 = 0.0  # the amount of time remaining to player 1
@@ -16,8 +16,8 @@ opponent = -1
 # You should modify this function
 # validMoves is a list of valid locations that you could place your "stone" on this turn
 # Note that "state" is a global variable 2D list that shows the state of the game
-def move():
-    my_move = alpha_beta_pruning()
+def move(current_round):
+    my_move = alpha_beta_pruning(current_round)
     return my_move
 
 
@@ -109,12 +109,12 @@ def could_be(row, col, current_player):
 
 
 # generates the set of valid moves for the player; returns a list of valid moves (validMoves)
-def get_valid_moves(board_state, current_player, current_round=5):
+def get_valid_moves(board_state, current_player, current_round):
     valid_moves = []
     # print("Round: " + str(current_round))
 
-    for i in range(8):
-        print(state[i])
+    # for i in range(8):
+    #     print(state[i])
 
     if current_round < 4:
         if board_state[3][3] == 0:
@@ -145,12 +145,13 @@ def play_game(host):
 
         if status[0] == me:
             print("Move")
-            valid_moves = get_valid_moves(state, status[1], me)
-            print(valid_moves)
+            current_round = status[1]
+            # valid_moves = get_valid_moves(state, status[1], me)
+            # print(valid_moves)
 
-            my_move = move()
+            my_move = move(current_round)
 
-            sel = str(valid_moves[my_move][0]) + "\n" + str(valid_moves[my_move][1]) + "\n"
+            sel = str(my_move[0]) + "\n" + str(my_move[1]) + "\n"
             print("<" + sel + ">")
             sock.send(sel.encode("utf-8"))
             print("sent the message")
@@ -158,20 +159,20 @@ def play_game(host):
             print("It isn't my turn")
 
 
-def alpha_beta_pruning():
-    cost, best_move = max_value(state, math.inf, math.inf, depth - 1)
+def alpha_beta_pruning(current_round):
+    cost, best_move = max_value(state, -math.inf, math.inf, depth - 1, current_round)
     return best_move
 
 
-def max_value(board_state, alpha, beta, current_depth):
+def max_value(board_state, alpha, beta, current_depth, current_round):
     if current_depth == 0:
-        return utility(board_state)
-    best_value_so_far = math.inf
+        return utility(board_state, current_round), None
+    best_value_so_far = -math.inf
     best_move = None
-    valid_moves = get_valid_moves(board_state, me)
+    valid_moves = get_valid_moves(board_state, me, current_round)
     for each in valid_moves:
         current_move_value, move_for_value = min_value(new_board_state(board_state, me, each),
-                                                       alpha, beta, current_depth - 1)
+                                                       alpha, beta, current_depth - 1, current_round + 1)
         if current_move_value > best_value_so_far:
             best_value_so_far = current_move_value
             best_move = each
@@ -181,33 +182,34 @@ def max_value(board_state, alpha, beta, current_depth):
     return best_value_so_far, best_move
 
 
-def min_value(board_state, alpha, beta, current_depth):
+def min_value(board_state, alpha, beta, current_depth, current_round):
     if current_depth == 0:
-        return utility(board_state)
+        return utility(board_state, current_round), None
     best_value_so_far = math.inf
     best_move = None
-    valid_moves = get_valid_moves(board_state, opponent)
+    valid_moves = get_valid_moves(board_state, opponent, current_round)
     for each in valid_moves:
         current_move_value, move_for_value = max_value(new_board_state(board_state, opponent, each),
-                                                       alpha, beta, current_depth - 1)
+                                                       alpha, beta, current_depth - 1, current_round + 1)
         if current_move_value < best_value_so_far:
             best_value_so_far = current_move_value
             best_move = each
-        best_value_so_far = min(best_value_so_far, )
         if best_value_so_far <= alpha:  # pruning
             return best_value_so_far, best_move
         beta = min(beta, best_value_so_far)
     return best_value_so_far, best_move
 
 
-def utility(current_state):
-    return len(get_valid_moves(current_state, me)) - len(get_valid_moves(current_state, opponent))
+def utility(current_state, current_round):
+    good_moves = len(get_valid_moves(current_state, me, current_round))
+    bad_moves = len(get_valid_moves(current_state, opponent, current_round))
+    return good_moves - bad_moves
 
 
 # Mimics doing specified move on current state
 # Returns a new board state
 def new_board_state(current_state, player, current_move):
-    new_state = current_state
+    new_state = copy.deepcopy(current_state)
     new_state[current_move[0]][current_move[1]] = player
     return new_state
 
@@ -223,7 +225,7 @@ if __name__ == "__main__":
     print(str(sys.argv[1]))
     me = int(sys.argv[2])
     if me == 1 or me == 2:
-        opponent = 2 if me == 1 else opponent = 1
+        opponent = 2 if me == 1 else 1
         play_game(sys.argv[1])
     else:
         print("USAGE: python3 RandomGuy.py [ip address] [1,2]")
