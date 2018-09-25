@@ -23,6 +23,13 @@ playrandom: Java
 	cd ..
 	cd ReversiRandom_Python && python3 RandomGuy.py localhost 2&
 	cd ..
+
+playtest: Java 
+	cd ReversiServer && java Reversi 10&
+	cd ..
+	cd ReversiRandom_Python && python3 RandomGuy.py localhost 1&
+	cd ..
+
 kill:
 	killall java
 	killall python3
