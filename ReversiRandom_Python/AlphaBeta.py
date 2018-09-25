@@ -159,6 +159,10 @@ def play_game(host):
             print("It isn't my turn")
 
 
+class NoValidMovesError(object):
+    pass
+
+
 def alpha_beta_pruning(current_round):
     cost, best_move = max_value(state, -math.inf, math.inf, depth - 1, current_round)
     return best_move
@@ -170,12 +174,17 @@ def max_value(board_state, alpha, beta, current_depth, current_round):
     best_value_so_far = -math.inf
     best_move = None
     valid_moves = get_valid_moves(board_state, me, current_round)
+    if len(valid_moves) == 0:
+        print("No Valid Moves exist");
+        raise NoValidMovesError
     for each in valid_moves:
         current_move_value, move_for_value = min_value(new_board_state(board_state, me, each),
                                                        alpha, beta, current_depth - 1, current_round + 1)
         if current_move_value > best_value_so_far:
             best_value_so_far = current_move_value
             best_move = each
+        if best_move is None:
+            print("An error has occurred with selecting best move")
         if best_value_so_far >= beta:  # pruning
             return best_value_so_far, best_move
         alpha = max(alpha, best_value_so_far)
@@ -188,12 +197,18 @@ def min_value(board_state, alpha, beta, current_depth, current_round):
     best_value_so_far = math.inf
     best_move = None
     valid_moves = get_valid_moves(board_state, opponent, current_round)
+    if len(valid_moves) == 0:
+        print("No Valid Moves exist");
+        raise NoValidMovesError
     for each in valid_moves:
         current_move_value, move_for_value = max_value(new_board_state(board_state, opponent, each),
                                                        alpha, beta, current_depth - 1, current_round + 1)
         if current_move_value < best_value_so_far:
             best_value_so_far = current_move_value
             best_move = each
+        if best_move is None:
+            print("An error has occurred with selecting best move")
+
         if best_value_so_far <= alpha:  # pruning
             return best_value_so_far, best_move
         beta = min(beta, best_value_so_far)
