@@ -17,8 +17,6 @@ opponent = -1
 # validMoves is a list of valid locations that you could place your "stone" on this turn
 # Note that "state" is a global variable 2D list that shows the state of the game
 def move():
-    # just return a random move
-    # myMove = randint(0, len(validMoves) - 1)
     my_move = alpha_beta_pruning()
     return my_move
 

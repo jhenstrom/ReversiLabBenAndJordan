@@ -16,20 +16,23 @@ clean:
 	cd ReversiRandom_Java && rm -f *.class && cd ..
 	cd ReversiServer && rm -f *.class && cd ..
 
-playrandom: Java
-	cd ReversiServer && java Reversi 10&
-	cd ..
-	cd ReversiRandom_Python && python3 RandomGuy.py localhost 1&
-	cd ..
-	cd ReversiRandom_Python && python3 RandomGuy.py localhost 2&
+playrandom: playjava playrandomone playrandomtwo
+
+playtest: playjava playrandomone 
+
+playjava: Java
+	cd ReversiServer && java Reversi 10 > ../server.out 2>&1 &
 	cd ..
 
-playtest: Java 
-	cd ReversiServer && java Reversi 10&
+playrandomone:
+	cd ReversiRandom_Python && python3 RandomGuy.py localhost 1 > ../randomone.out 2>&1 &
 	cd ..
-	cd ReversiRandom_Python && python3 RandomGuy.py localhost 1&
+
+playrandomtwo:
+	cd ReversiRandom_Python && python3 RandomGuy.py localhost 2 > ../randomtwo.out 2>&1 &
 	cd ..
 
 kill:
-	killall java
-	killall python3
+	killall -q java  || true
+	killall -q python3 || true
+	 
