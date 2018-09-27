@@ -7,7 +7,7 @@ import copy
 
 t1 = 0.0  # the amount of time remaining to player 1
 t2 = 0.0  # the amount of time remaining to player 2
-depth = 4
+depth = 8
 state = [[0 for x in range(8)] for y in range(8)]  # state[0][0] is the bottom left corner of the board (on the GUI)
 me = -1
 opponent = -1
@@ -159,10 +159,6 @@ def play_game(host):
             print("It isn't my turn")
 
 
-class NoValidMovesError(object):
-    pass
-
-
 def alpha_beta_pruning(current_round):
     cost, best_move = max_value(state, -math.inf, math.inf, depth - 1, current_round)
     return best_move
@@ -175,8 +171,7 @@ def max_value(board_state, alpha, beta, current_depth, current_round):
     best_move = None
     valid_moves = get_valid_moves(board_state, me, current_round)
     if len(valid_moves) == 0:
-        print("No Valid Moves exist");
-        raise NoValidMovesError
+        return utility(board_state, current_round), None
     for each in valid_moves:
         current_move_value, move_for_value = min_value(new_board_state(board_state, me, each),
                                                        alpha, beta, current_depth - 1, current_round + 1)
@@ -198,8 +193,7 @@ def min_value(board_state, alpha, beta, current_depth, current_round):
     best_move = None
     valid_moves = get_valid_moves(board_state, opponent, current_round)
     if len(valid_moves) == 0:
-        print("No Valid Moves exist");
-        raise NoValidMovesError
+        return utility(board_state, current_round), None
     for each in valid_moves:
         current_move_value, move_for_value = max_value(new_board_state(board_state, opponent, each),
                                                        alpha, beta, current_depth - 1, current_round + 1)
