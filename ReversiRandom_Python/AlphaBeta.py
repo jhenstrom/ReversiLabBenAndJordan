@@ -72,7 +72,7 @@ def read_message(sock):
     return turn, current_round
 
 
-def check_direction(row, col, incx, incy, current_player):
+def check_direction(board_state, row, col, incx, incy, current_player):
     sequence = []
     for i in range(1, 8):
         r = row + incy * i
@@ -81,7 +81,7 @@ def check_direction(row, col, incx, incy, current_player):
         if (r < 0) or (r > 7) or (c < 0) or (c > 7):
             break
 
-        sequence.append(state[r][c])
+        sequence.append(board_state[r][c])
 
     count = 0
     for i in range(len(sequence)):
@@ -103,13 +103,13 @@ def check_direction(row, col, incx, incy, current_player):
     return False
 
 
-def could_be(row, col, current_player):
+def could_be(board_state, row, col, current_player):
     for incx in range(-1, 2):
         for incy in range(-1, 2):
             if (incx == 0) and (incy == 0):
                 continue
 
-            if check_direction(row, col, incx, incy, current_player):
+            if check_direction(board_state, row, col, incx, incy, current_player):
                 return True
 
     return False
@@ -136,7 +136,7 @@ def get_valid_moves(board_state, current_player, current_round):
         for i in range(8):
             for j in range(8):
                 if board_state[i][j] == 0:
-                    if could_be(i, j, current_player):
+                    if could_be(board_state, i, j, current_player):
                         valid_moves.append([i, j])
 
     return valid_moves
@@ -216,9 +216,23 @@ def min_value(board_state, alpha, beta, current_depth, current_round):
     return best_value_so_far, best_move
 
 
+def get_move_utility(board_state, current_player, current_round):
+    total_utility = 0
+    for i in range(8):
+        for j in range(8):
+            if board_state[i][j] == 0:
+                if could_be(i, j, current_player):
+                    total_utility += position_values[i][j]
+
+    return total_utility
+
+
+
 def utility(current_state, current_round):
-    good_moves = len(get_valid_moves(current_state, me, current_round))
-    bad_moves = len(get_valid_moves(current_state, opponent, current_round))
+    if current_round < 4:
+        return 0
+    good_moves = get_move_utility(current_state, me)
+    bad_moves = get_move_utility(current_state, opponent)
     return good_moves - bad_moves
 
 
