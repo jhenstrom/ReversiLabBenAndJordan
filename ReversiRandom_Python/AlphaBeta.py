@@ -7,7 +7,7 @@ import copy
 
 t1 = 0.0  # the amount of time remaining to player 1
 t2 = 0.0  # the amount of time remaining to player 2
-depth = 8
+depth = 6
 state = [[0 for x in range(8)] for y in range(8)]  # state[0][0] is the bottom left corner of the board (on the GUI)
 me = -1
 opponent = -1
@@ -215,25 +215,49 @@ def min_value(board_state, alpha, beta, current_depth, current_round):
         beta = min(beta, best_value_so_far)
     return best_value_so_far, best_move
 
-
-def get_move_utility(board_state, current_player, current_round):
-    total_utility = 0
-    for i in range(8):
-        for j in range(8):
-            if board_state[i][j] == 0:
-                if could_be(i, j, current_player):
-                    total_utility += position_values[i][j]
-
-    return total_utility
+##---- FOR FRONTIER STRATEGY ----##
+#def get_move_utility(board_state, current_player):
+#    total_utility = 0
+#    for i in range(8):
+#        for j in range(8):
+#            if board_state[i][j] == 0:
+#                if could_be(board_state, i, j, current_player):
+#                    total_utility += position_values[i][j]
+#
+#    return total_utility
 
 
 
 def utility(current_state, current_round):
-    if current_round < 4:
-        return 0
-    good_moves = get_move_utility(current_state, me)
-    bad_moves = get_move_utility(current_state, opponent)
-    return good_moves - bad_moves
+
+    ##---- FOR IF WE CAN GET TO THE END OF THE TREE ----##
+    if current_round == 63:
+        utility = 0
+        for i in range(8):
+            for j in range(8):
+                if current_state[i][j] == me:
+                    utility += 1
+        return utility
+
+    ##---- FOR FRONTIER STRATEGY ----##
+    #good_moves = get_move_utility(current_state, me)
+    #bad_moves = get_move_utility(current_state, opponent)
+    #return good_moves - bad_moves
+
+    ##---- FOR POSITION VALUE STRATEGY ---##
+    my_utility = board_value(current_state, me)
+    opp_utility = board_value(current_state, opponent)
+    return my_utility - opp_utility
+
+##---- FOR POSITION VALUE STRATEGY ----##
+def board_value(board_state, current_player):
+    total_utility = 0
+    for i in range(8):
+        for j in range(8):
+            if board_state[i][j] == current_player:
+                total_utility += position_values[i][j]
+
+    return total_utility
 
 
 # Mimics doing specified move on current state
