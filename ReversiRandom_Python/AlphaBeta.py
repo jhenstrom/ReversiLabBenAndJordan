@@ -11,7 +11,14 @@ depth = 4
 state = [[0 for x in range(8)] for y in range(8)]  # state[0][0] is the bottom left corner of the board (on the GUI)
 me = -1
 opponent = -1
-
+position_values = [[99,  -8,  8,  6,  6,  8,  -8, 99],
+                   [-8, -24, -4, -3, -3, -4, -24, -8],
+                   [ 8,  -4,  7,  4,  4,  7,  -4,  8],
+                   [ 6,  -3,  4,  0,  0,  4,  -3,  6],
+                   [ 6,  -3,  4,  0,  0,  4,  -3,  6],
+                   [ 8,  -4,  7,  4,  4,  7,  -4,  8],
+                   [-8, -24, -4, -3, -3, -4, -24, -8],
+                   [99,  -8,  8,  6,  6,  8,  -8, 99]]
 
 # You should modify this function
 # validMoves is a list of valid locations that you could place your "stone" on this turn
